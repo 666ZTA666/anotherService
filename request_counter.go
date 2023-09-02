@@ -73,6 +73,12 @@ func (r *ipCounter) addIP(ip string) {
 	r.m.Unlock()
 }
 
+func (r *ipCounter) dropDataByIP(ip string) {
+	r.m.Lock()
+	r.counter[ip] = map[time.Time]struct{}{}
+	r.m.Unlock()
+}
+
 // runGC - garbage collector удаляет старые записи примерно раз в секунду
 func (r *ipCounter) runGC() {
 	// запускаем бесконечный цикл

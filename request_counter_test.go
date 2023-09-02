@@ -333,3 +333,91 @@ func Test_ipCounter_gc(t *testing.T) {
 		})
 	}
 }
+
+func Test_ipCounter_dropDataByIP(t *testing.T) {
+	type fields struct {
+		m       mutex
+		counter map[string]map[time.Time]struct{}
+		ttl     time.Duration
+	}
+	type args struct {
+		ip string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   ipCounter
+	}{
+		{
+			name: "deleting nil case",
+			fields: fields{
+				m: newMutexStub(),
+				counter: map[string]map[time.Time]struct{}{
+					"1": nil,
+				},
+			},
+			args: args{
+				ip: "1",
+			},
+			want: ipCounter{
+				m: newMutexStub(),
+				counter: map[string]map[time.Time]struct{}{
+					"1": {},
+				},
+			},
+		},
+		{
+			name: "deleting empty map case",
+			fields: fields{
+				m: newMutexStub(),
+				counter: map[string]map[time.Time]struct{}{
+					"1": {},
+				},
+			},
+			args: args{
+				ip: "1",
+			},
+			want: ipCounter{
+				m: newMutexStub(),
+				counter: map[string]map[time.Time]struct{}{
+					"1": {},
+				},
+			},
+		},
+		{
+			name: "deleting non empty map case",
+			fields: fields{
+				m: newMutexStub(),
+				counter: map[string]map[time.Time]struct{}{
+					"1": {
+						nTime:        {},
+						nTime.Add(1): {},
+					},
+				},
+			},
+			args: args{
+				ip: "1",
+			},
+			want: ipCounter{
+				m: newMutexStub(),
+				counter: map[string]map[time.Time]struct{}{
+					"1": {},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &ipCounter{
+				m:       tt.fields.m,
+				counter: tt.fields.counter,
+				ttl:     tt.fields.ttl,
+			}
+			r.dropDataByIP(tt.args.ip)
+			if !reflect.DeepEqual(*r, tt.want) {
+				t.Errorf("\ngot = %v\nwant= %v", *r, tt.want)
+			}
+		})
+	}
+}
