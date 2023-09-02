@@ -12,37 +12,39 @@ const (
 	justIP      = "0.0.0.0"
 )
 
-// dropper - дропает\стирает записи по определенному айпишнику
+// dropper - дропает\стирает записи по определенному ай-пи адресу.
 type dropper interface {
+	// Удаляет записи для данного ай-пи адреса.
 	dropDataByIP(ip string)
 }
 
-// dropLimitHandler хендлер, метод которого подтирает записи о запросах в декорируемый хендлер
+// dropLimitHandler - структура, метод которой подтирает записи о запросах в декорируемый обработчик.
 type dropLimitHandler struct {
 	d dropper
 }
 
-// newDropLimitHandler создает новый хендлер для сброса настроек лимитов
+// newDropLimitHandler - создает новый обработчик для сброса настроек лимитов.
 func newDropLimitHandler(d dropper) fasthttp.RequestHandler {
 	return (&dropLimitHandler{d: d}).handle
 }
 
-// handle имплементация fasthttp.RequestHandler
+// handle - имплементация fasthttp.RequestHandler.
 func (d *dropLimitHandler) handle(ctx *fasthttp.RequestCtx) {
-	// парсим префикс из кверей
+	// Читаем префикс из параметров урла.
 	localPrefix := ctx.QueryArgs().Peek(prefixQuery)
 	if len(localPrefix) == 0 {
-		// если он пустой, запрос плохой
+		// Если он пустой, запрос плохой.
 		ctx.Error(fasthttp.StatusMessage(fasthttp.StatusBadRequest), fasthttp.StatusBadRequest)
+		// Выходим.
 		return
 	}
-	// возможно это костыльно и криво, но Я вообще впервые сталкиваюсь с масками префиксами и подсетями
-	// Работает - не трогай (или кинь пул реквест)
+	// Возможно это костыльно и криво, но Я впервые сталкиваюсь с масками префиксами и подсетями.
+	// Работает - не трогай (или кинь пул-реквест).
 	_, network, err := net.ParseCIDR(justIP + "/" + string(localPrefix))
 	if err != nil {
 		ctx.Error(errors.Wrap(err, "bad prefix").Error(), fasthttp.StatusBadRequest)
 		return
 	}
-	// дропаем по данному айпишнику записи в дропере
+	// Удаляем по данному ай-пи адресу записи.
 	d.d.dropDataByIP(net.ParseIP(justIP).Mask(network.Mask).String())
 }
