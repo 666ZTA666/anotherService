@@ -10,7 +10,7 @@ import (
 
 var (
 	timeToLive = 1 * time.Minute
-	limit      = uint16(100)
+	limit      = uint16(10)
 	prefix     = uint8(24)
 )
 

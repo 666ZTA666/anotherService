@@ -41,7 +41,17 @@ func Test_dropLimitHandler_handle(t *testing.T) {
 			args: args{
 				ctx: ctxWithPrefix("24"),
 			},
-			wantCode: 200,
+			wantCode: fasthttp.StatusOK,
+		},
+		{
+			name: "",
+			fields: fields{
+				d: newDropperStub(),
+			},
+			args: args{
+				ctx: ctxWithIP("0:0:0:0:0:1"),
+			},
+			wantCode: fasthttp.StatusBadRequest,
 		},
 		{
 			name: "bad query case",
@@ -51,7 +61,7 @@ func Test_dropLimitHandler_handle(t *testing.T) {
 			args: args{
 				ctx: ctxWithPrefix("33"),
 			},
-			wantCode: 400,
+			wantCode: fasthttp.StatusBadRequest,
 		},
 		{
 			name: "empty query case",
@@ -61,7 +71,7 @@ func Test_dropLimitHandler_handle(t *testing.T) {
 			args: args{
 				ctx: ctxWithPrefix(""),
 			},
-			wantCode: 400,
+			wantCode: fasthttp.StatusBadRequest,
 		},
 		{
 			name: "empty request string case",
@@ -71,7 +81,7 @@ func Test_dropLimitHandler_handle(t *testing.T) {
 			args: args{
 				ctx: &fasthttp.RequestCtx{},
 			},
-			wantCode: 400,
+			wantCode: fasthttp.StatusBadRequest,
 		},
 	}
 	for _, tt := range tests {
